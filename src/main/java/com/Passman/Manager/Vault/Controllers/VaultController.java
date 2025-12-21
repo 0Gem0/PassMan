@@ -47,15 +47,15 @@ public class VaultController {
     }
 
     @GetMapping("/entries/count")
-    public List<EntryDTO> showCountEntries(
-            @AuthenticationPrincipal MyUserDetails userDetails, @RequestParam String categoryName) {
+    public Long showCountEntries(
+            @AuthenticationPrincipal MyUserDetails userDetails) {
         Long id = userDetails.getId();
-        return entryService.findAll(id);
+        return entryService.findCountEntries(id);
     }
 
     @GetMapping("/entries/all")
     public List<EntryDTO> showAll(
-            @AuthenticationPrincipal MyUserDetails userDetails, @RequestParam String categoryName) {
+            @AuthenticationPrincipal MyUserDetails userDetails) {
         Long id = userDetails.getId();
         return entryService.findAll(id);
     }
