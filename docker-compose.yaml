@@ -6,9 +6,9 @@ services:
       - 'POSTGRES_PASSWORD=Pass123'
       - 'POSTGRES_USER=postgres'
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     ports:
-      - '5433:5432'
+      - '5432:5432'
   backend:
     build:
       context: ./
@@ -18,7 +18,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5433/PassMan
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/PassMan
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: Pass123
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
