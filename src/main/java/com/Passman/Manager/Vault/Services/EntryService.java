@@ -55,6 +55,13 @@ public class EntryService {
         return entryRepository.findAllByCategoryIdAndUserId(category.getId(), userId).stream().map(entry -> mapper.map(entry,EntryDTO.class)).collect(Collectors.toList());
     }
 
+    public List<EntryDTO> findAll(long userId){
+        return entryRepository.findAllByUserId(userId).stream().map(entry -> mapper.map(entry,EntryDTO.class)).collect(Collectors.toList());
+    }
+
+    public Long findCountEntries(long userId){
+        return entryRepository.findCountAll(userId);
+    }
 
     @Transactional
     public EntryDTO updateEntry(long id, EntryDTO updatedEntryDTO, long userId){
@@ -69,7 +76,9 @@ public class EntryService {
         entry.setEncryptedData(updatedEntryDTO.getData().getBytes());
         entry.setEmail(updatedEntryDTO.getEmail());
         entry.setWebsite(updatedEntryDTO.getWebsite());
-        return new EntryDTO();
+        EntryDTO entryDTO = new EntryDTO();
+        mapper.map(entry,entryDTO);
+        return entryDTO;
     }
 
     @Transactional

@@ -30,7 +30,6 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> processRegistrationPage(@RequestBody RegisterUserDto registerUserDto){
-        System.out.println(registerUserDto.getLogin());
         registrationService.register(registerUserDto);
         return ResponseEntity.ok("registered");
     }
