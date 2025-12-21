@@ -1,0 +1,28 @@
+services:
+  postgres:
+    image: 'postgres:latest'
+    environment:
+      - 'POSTGRES_DB=PassMan'
+      - 'POSTGRES_PASSWORD=Pass123'
+      - 'POSTGRES_USER=postgres'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '5433:5432'
+  backend:
+    build:
+      context: ./
+    container_name: passman-backend
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5433/PassMan
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: Pass123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
