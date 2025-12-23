@@ -60,6 +60,12 @@ public class VaultController {
         return entryService.findAll(id);
     }
 
+    @DeleteMapping("/entries/{id}")
+    public String deleteEntry(@PathVariable long id){
+        entryService.delete(id);
+        return "entry deleted";
+    }
+
     @GetMapping("/entries/{id}")
     public EntryDTO showEntry(
             @AuthenticationPrincipal MyUserDetails userDetails, @PathVariable Long id){
