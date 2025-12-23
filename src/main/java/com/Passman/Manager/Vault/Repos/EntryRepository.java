@@ -17,6 +17,7 @@ public interface EntryRepository extends JpaRepository<Entry,Long> {
 
      List<Entry> findAllByCategoryIdAndUserId(long categoryId, long userId);
 
+     void deleteById(long id);
 
      @Query(value = "select count(e.id) from entries e where e.user_id = :userId", nativeQuery = true)
      Long findCountAll(@Param("userId") long userId);

@@ -82,6 +82,11 @@ public class EntryService {
     }
 
     @Transactional
+    public void delete(long id){
+        entryRepository.deleteById(id);
+    }
+
+    @Transactional
     public long save(EntryDTO entryDTO, long ownerId){
         Entry entry = new Entry();
         User user = userRepository.findUserById(ownerId);
