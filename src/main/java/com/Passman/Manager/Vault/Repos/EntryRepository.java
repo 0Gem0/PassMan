@@ -15,7 +15,6 @@ import java.util.Optional;
 @Repository
 public interface EntryRepository extends JpaRepository<Entry,Long> {
 
-     //В vault уже ищу по категории записи
      List<Entry> findAllByCategoryIdAndUserId(long categoryId, long userId);
 
 
@@ -23,7 +22,7 @@ public interface EntryRepository extends JpaRepository<Entry,Long> {
      Long findCountAll(@Param("userId") long userId);
 
      List<Entry> findAllByUserId(long userId);
-     Entry findByCategoryNameAndTitleAndUserId(String categoryName, String title, long userId);
+
 
      @Query(
              value = "SELECT c.name as categoryName, count(e.id) as countEntries " +
