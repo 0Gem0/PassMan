@@ -14,15 +14,17 @@ import lombok.Setter;
         private String email;
         private String categoryName;
         private String data;
+        private String note;
 
 
-    public EntryDTO(long id, String title, String website, String email, String categoryName, String data) {
+    public EntryDTO(long id, String title, String website, String email, String categoryName, String data, String note) {
         this.id = id;
         this.title = title;
         this.website = website;
         this.email = email;
         this.categoryName = categoryName;
         this.data = data;
+        this.note = note;
     }
 
     public EntryDTO(){
