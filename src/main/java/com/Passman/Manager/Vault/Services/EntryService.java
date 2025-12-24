@@ -5,6 +5,7 @@ import com.Passman.Manager.Auth.Models.User;
 import com.Passman.Manager.Auth.Repos.UserRepository;
 import com.Passman.Manager.Vault.DTO.CategoryCountDTO;
 import com.Passman.Manager.Vault.DTO.EntryDTO;
+import com.Passman.Manager.Vault.DTO.EntryGetDTO;
 import com.Passman.Manager.Vault.Models.Category;
 import com.Passman.Manager.Vault.Models.Entry;
 import com.Passman.Manager.Vault.Repos.CategoryRepository;
@@ -87,7 +88,7 @@ public class EntryService {
     }
 
     @Transactional
-    public long save(EntryDTO entryDTO, long ownerId){
+    public long save(EntryGetDTO entryDTO, long ownerId){
         Entry entry = new Entry();
         User user = userRepository.findUserById(ownerId);
         Category category = categoryRepository.findCategoryByNameAndOwnerId(entryDTO.getCategoryName(),ownerId);
@@ -112,6 +113,11 @@ public class EntryService {
     }
 
     public Entry enrichEntry(EntryDTO entryDTO, Entry entry){
+        mapper.map(entryDTO, entry);
+        return entry;
+    }
+
+    public Entry enrichEntry(EntryGetDTO entryDTO, Entry entry){
         mapper.map(entryDTO, entry);
         return entry;
     }

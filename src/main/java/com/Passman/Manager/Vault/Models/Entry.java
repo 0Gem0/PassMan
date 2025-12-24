@@ -31,6 +31,9 @@ public class Entry {
     @Column(length = 50)
     private String email;
 
+    @Column(length = 100)
+    private String note;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;

@@ -4,6 +4,7 @@ package com.Passman.Manager.Vault.Controllers;
 import com.Passman.Manager.Auth.Security.MyUserDetails;
 import com.Passman.Manager.PassGen.Services.PasswordGeneratorService;
 import com.Passman.Manager.Vault.DTO.EntryDTO;
+import com.Passman.Manager.Vault.DTO.EntryGetDTO;
 import com.Passman.Manager.Vault.DTO.PasswordGenerationDTO;
 import com.Passman.Manager.Vault.Models.Entry;
 import com.Passman.Manager.Vault.Services.CategoryService;
@@ -85,8 +86,8 @@ public class VaultController {
     }
 
     @PostMapping("/entries/create")
-    public long createPassword(@AuthenticationPrincipal MyUserDetails userDetails, @RequestBody EntryDTO entryDTO){
-        return entryService.save(entryDTO, userDetails.getId());
+    public long createPassword(@AuthenticationPrincipal MyUserDetails userDetails, @RequestBody EntryGetDTO entryGetDTO){
+        return entryService.save(entryGetDTO, userDetails.getId());
     }
 
     @PatchMapping("/entries/update/{id}")
