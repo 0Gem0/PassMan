@@ -54,6 +54,10 @@ public class User {
                 inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
     private Set<Role> roles = new HashSet<>();
 
+
+    @Column(name = "encrypted_dek")
+    private byte[] encryptedDek;
+
     @PrePersist
     public void onCreate() {
         createdAt = LocalDateTime.now();

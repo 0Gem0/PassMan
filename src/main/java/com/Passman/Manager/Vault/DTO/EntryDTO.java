@@ -13,19 +13,10 @@ import lombok.Setter;
         private String website;
         private String email;
         private String categoryName;
-        private String data;
+        private byte[] password;
+        private byte[] passwordIv;
         private String note;
 
-
-    public EntryDTO(long id, String title, String website, String email, String categoryName, String data, String note) {
-        this.id = id;
-        this.title = title;
-        this.website = website;
-        this.email = email;
-        this.categoryName = categoryName;
-        this.data = data;
-        this.note = note;
-    }
 
     public EntryDTO(){
 

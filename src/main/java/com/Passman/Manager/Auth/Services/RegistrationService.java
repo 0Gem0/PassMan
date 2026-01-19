@@ -57,28 +57,28 @@ public class RegistrationService {
         mapper.map(registerUserDto, user);
         user.setPassword(passwordEncoder.encode(registerUserDto.getPassword()));
         roleUser.getUsers().add(user);
-        userRepository.save(enrichUser(user));
+        userRepository.save(user);
     }
 
-    public String createSalt(int length){
-        byte[] salt = new byte[length];
-        SECURE_RANDOM.nextBytes(salt);
-        return Base64.getEncoder().encodeToString(salt);
-    }
+//    public String createSalt(int length){
+//        byte[] salt = new byte[length];
+//        SECURE_RANDOM.nextBytes(salt);
+//        return Base64.getEncoder().encodeToString(salt);
+//    }
 
-    public KdfParams setParams(){
-        KdfParams params = new KdfParams();
-        params.setMemoryMb(65536);
-        params.setIterations(10);
-        params.setParallelism(2);
-        params.setDkLen(32);
-        return params;
-    }
-
-    public User enrichUser(User user){
-        user.setKdfParams(setParams());
-        user.setSalt(createSalt(32));
-//        user.setCompany("Company");
-        return user;
-    }
+//    public KdfParams setParams(){
+//        KdfParams params = new KdfParams();
+//        params.setMemoryMb(65536);
+//        params.setIterations(10);
+//        params.setParallelism(2);
+//        params.setDkLen(32);
+//        return params;
+//    }
+//
+//    public User enrichUser(User user){
+//        user.setKdfParams(setParams());
+//        user.setSalt(createSalt(32));
+////        user.setCompany("Company");
+//        return user;
+//    }
 }

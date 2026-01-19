@@ -38,11 +38,14 @@ public class Entry {
     @JoinColumn(name = "category_id")
     private Category category;
 
-    @Column(name = "encrypted_data", nullable = false)
-    private byte[] encryptedData;
+    @Column(name = "password", nullable = false)
+    private byte[] password;
 
-    @Column(name = "encrypted_dek", nullable = false)
-    private byte[] encryptedDek;
+    @Column(name = "password_iv", nullable = false)
+    private byte[] passwordIv;
+//
+//    @Column(name = "encrypted_dek", nullable = false)
+//    private byte[] encryptedDek;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

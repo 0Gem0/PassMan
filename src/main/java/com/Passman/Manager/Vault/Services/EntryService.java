@@ -2,28 +2,29 @@ package com.Passman.Manager.Vault.Services;
 
 
 import com.Passman.Manager.Auth.Models.User;
+import com.Passman.Manager.Auth.POJO.KdfParams;
 import com.Passman.Manager.Auth.Repos.UserRepository;
 import com.Passman.Manager.Vault.DTO.CategoryCountDTO;
+import com.Passman.Manager.Vault.DTO.CryptoDTO;
 import com.Passman.Manager.Vault.DTO.EntryDTO;
 import com.Passman.Manager.Vault.DTO.EntryGetDTO;
 import com.Passman.Manager.Vault.Models.Category;
 import com.Passman.Manager.Vault.Models.Entry;
 import com.Passman.Manager.Vault.Repos.CategoryRepository;
 import com.Passman.Manager.Vault.Repos.EntryRepository;
+import jakarta.persistence.Transient;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.beans.Transient;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class EntryService {
 
     private final EntryRepository entryRepository;
@@ -51,18 +52,51 @@ public class EntryService {
 
     }
 
+
+
     public List<EntryDTO> findAllByCategory(String categoryName, long userId){
         Category category = categoryRepository.findCategoryByNameAndOwnerId(categoryName, userId);
         return entryRepository.findAllByCategoryIdAndUserId(category.getId(), userId).stream().map(entry -> mapper.map(entry,EntryDTO.class)).collect(Collectors.toList());
     }
 
     public List<EntryDTO> findAll(long userId){
-        return entryRepository.findAllByUserId(userId).stream().map(entry -> mapper.map(entry,EntryDTO.class)).collect(Collectors.toList());
+        return entryRepository.findAllByUserId(userId).stream()
+                .map(entry -> mapper.map(entry, EntryDTO.class))
+                .collect(Collectors.toList());
     }
-
     public Long findCountEntries(long userId){
         return entryRepository.findCountAll(userId);
     }
+
+
+    @Transactional
+    public Long addCategory(String categoryName, Long userId){
+        User user = userRepository.findUserById(userId);
+        Category category = new Category();
+        category.setName(categoryName);
+        category.setSystem(false);
+        category.setOwner(user);
+        return categoryRepository.save(category).getId();
+    }
+
+    public CryptoDTO sendMeta(long id){
+        Optional<byte[]> dek = userRepository.findUserDek(id);
+        if (dek.isEmpty()){
+            return new CryptoDTO(false, new KdfParams(), new byte[0]);
+        }
+        else{
+            User user = userRepository.findUserById(id);
+            return new CryptoDTO(true, user.getKdfParams(), user.getEncryptedDek());
+        }
+    }
+
+    @Transactional
+    public void setMeta(long id, CryptoDTO cryptoDTO){
+        User user = userRepository.findUserById(id);
+        user.setEncryptedDek(cryptoDTO.getEncryptedDek());
+        user.setKdfParams(cryptoDTO.getKdfParams());
+    }
+
 
     @Transactional
     public EntryDTO updateEntry(long id, EntryDTO updatedEntryDTO, long userId){
@@ -74,7 +108,6 @@ public class EntryService {
         Category category = categoryRepository.findCategoryByNameAndOwnerId(updatedEntryDTO.getCategoryName(), userId);
         entry.setCategory(category);
         entry.setTitle(updatedEntryDTO.getTitle());
-        entry.setEncryptedData(updatedEntryDTO.getData().getBytes());
         entry.setEmail(updatedEntryDTO.getEmail());
         entry.setWebsite(updatedEntryDTO.getWebsite());
         EntryDTO entryDTO = new EntryDTO();
@@ -92,12 +125,8 @@ public class EntryService {
         Entry entry = new Entry();
         User user = userRepository.findUserById(ownerId);
         Category category = categoryRepository.findCategoryByNameAndOwnerId(entryDTO.getCategoryName(),ownerId);
-        String originalString = entryDTO.getData();
-        byte[] originalBytes = originalString.getBytes(StandardCharsets.UTF_8);
-        entry.setEncryptedData(originalBytes);
         entry.setCategory(category);
         entry.setUser(user);
-        entry.setEncryptedDek("dfdfdf".getBytes());
         Entry entry1 = entryRepository.save(enrichEntry(entryDTO, entry));
         return entry1.getId();
     }
@@ -112,11 +141,8 @@ public class EntryService {
         return entryDTO;
     }
 
-    public Entry enrichEntry(EntryDTO entryDTO, Entry entry){
-        mapper.map(entryDTO, entry);
-        return entry;
-    }
 
+    @Transient
     public Entry enrichEntry(EntryGetDTO entryDTO, Entry entry){
         mapper.map(entryDTO, entry);
         return entry;
