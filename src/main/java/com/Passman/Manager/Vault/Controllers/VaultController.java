@@ -3,6 +3,7 @@ package com.Passman.Manager.Vault.Controllers;
 
 import com.Passman.Manager.Auth.Security.MyUserDetails;
 import com.Passman.Manager.PassGen.Services.PasswordGeneratorService;
+import com.Passman.Manager.Vault.DTO.CryptoDTO;
 import com.Passman.Manager.Vault.DTO.EntryDTO;
 import com.Passman.Manager.Vault.DTO.EntryGetDTO;
 import com.Passman.Manager.Vault.DTO.PasswordGenerationDTO;
@@ -40,12 +41,35 @@ public class VaultController {
         return entryService.findCountEntriesByCategory(id);
     }
 
+
+
     @GetMapping("/entries")
     public List<EntryDTO> showEntriesByCategory(
             @AuthenticationPrincipal MyUserDetails userDetails, @RequestParam String categoryName) {
         Long id = userDetails.getId();
         return entryService.findAllByCategory(categoryName, id);
     }
+
+    @GetMapping("/entries/meta")
+    public CryptoDTO sendMeta(@AuthenticationPrincipal MyUserDetails userDetails){
+        return entryService.sendMeta(userDetails.getId());
+    }
+
+    @PostMapping("/entries/meta")
+    public ResponseEntity<?> getMeta(@AuthenticationPrincipal MyUserDetails userDetails, @RequestBody CryptoDTO cryptoDTO){
+        entryService.setMeta(userDetails.getId(), cryptoDTO);
+        return ResponseEntity.ok("Meta added");
+    }
+
+    @PostMapping("/entries/addCategory")
+    public ResponseEntity<?> addCategory(
+            @AuthenticationPrincipal MyUserDetails userDetails, @RequestBody String categoryName) {
+        Long id = userDetails.getId();
+        entryService.addCategory(categoryName, id);
+        return ResponseEntity.ok("Category Added");
+    }
+
+
 
     @GetMapping("/entries/count")
     public Long showCountEntries(

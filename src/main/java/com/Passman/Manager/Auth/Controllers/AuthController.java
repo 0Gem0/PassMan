@@ -2,10 +2,12 @@ package com.Passman.Manager.Auth.Controllers;
 
 import com.Passman.Manager.Auth.DTO.LoginUserDTO;
 import com.Passman.Manager.Auth.DTO.RegisterUserDto;
+import com.Passman.Manager.Auth.Security.MyUserDetails;
 import com.Passman.Manager.Auth.Services.AuthService;
 import com.Passman.Manager.Auth.Services.RegistrationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 @RequestMapping("/auth")
 @RestController
@@ -33,5 +35,12 @@ public class AuthController {
         registrationService.register(registerUserDto);
         return ResponseEntity.ok("registered");
     }
+
+
+//    @PostMapping("/meta")
+//    public ResponseEntity<?> getUserMeta(@AuthenticationPrincipal MyUserDetails userDetails, @RequestBody CryptoDTO cryptoDTO){
+//        authService.setCryptoMeta(cryptoDTO, userDetails.getId());
+//        return ResponseEntity.ok("Meta created");
+//    }
 
 }
