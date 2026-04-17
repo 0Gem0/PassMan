@@ -58,8 +58,8 @@ public class SecurityConfig {
 //                        .requestMatchers("/v3/api-docs").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/vault/**").hasRole("USER")
+                                .requestMatchers("/management/**").hasAnyRole("ADMIN", "LEAD")
+                        .requestMatchers("/vault/**").hasAnyRole("ADMIN", "LEAD", "USER")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

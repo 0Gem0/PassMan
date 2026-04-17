@@ -24,6 +24,14 @@ public class AuthController {
         this.authService = authService;
     }
 
+    @GetMapping("/check")
+    public ResponseEntity<?> check(@AuthenticationPrincipal MyUserDetails user) {
+        if (user != null) {
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.status(401).build();
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> processLoginPage(@RequestBody LoginUserDTO loginUserDTO){
         authService.login(loginUserDTO);

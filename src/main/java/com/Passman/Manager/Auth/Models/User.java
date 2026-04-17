@@ -2,6 +2,10 @@ package com.Passman.Manager.Auth.Models;
 
 
 import com.Passman.Manager.Auth.POJO.KdfParams;
+import com.Passman.Manager.RolesManagement.Models.Department;
+import com.Passman.Manager.RolesManagement.Models.Role;
+import com.Passman.Manager.RolesManagement.Models.UserAccessRights;
+import com.Passman.Manager.RolesManagement.Models.Department;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
@@ -12,6 +16,7 @@ import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -29,7 +34,7 @@ public class User {
     private String login;
 
     @Column(name = "salt")
-    private String salt;
+    private byte[] cryptoSalt;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "kdf_params", columnDefinition = "jsonb")
@@ -54,9 +59,18 @@ public class User {
                 inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
     private Set<Role> roles = new HashSet<>();
 
+    @ManyToOne
+    @JoinColumn(name = "department_id", referencedColumnName = "id")
+    private Department department;
+
+    @OneToMany(mappedBy = "user")
+    private List<UserAccessRights> userAccessRights;
 
     @Column(name = "encrypted_dek")
     private byte[] encryptedDek;
+
+    @Column(name = "encrypted_dek_iv")
+    private byte[] encryptedDekIv;
 
     @PrePersist
     public void onCreate() {

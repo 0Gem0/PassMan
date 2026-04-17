@@ -1,25 +1,19 @@
 package com.Passman.Manager.Auth.Services;
 
 import com.Passman.Manager.Auth.DTO.RegisterUserDto;
-import com.Passman.Manager.Auth.Models.Role;
+import com.Passman.Manager.RolesManagement.Models.Role;
 import com.Passman.Manager.Auth.Models.User;
-import com.Passman.Manager.Auth.POJO.KdfParams;
-import com.Passman.Manager.Auth.Repos.RoleRepository;
+import com.Passman.Manager.RolesManagement.Repos.RoleRepository;
 import com.Passman.Manager.Auth.Repos.UserRepository;
 import com.Passman.Manager.Auth.util.PasswordMismatchException;
 import com.Passman.Manager.Auth.util.UserAlreadyExistsException;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.Banner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
-import java.util.Base64;
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 
 @Service
 public class RegistrationService {

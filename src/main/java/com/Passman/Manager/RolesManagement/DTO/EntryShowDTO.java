@@ -1,4 +1,4 @@
-package com.Passman.Manager.Vault.DTO;
+package com.Passman.Manager.RolesManagement.DTO;
 
 
 import lombok.Getter;
@@ -6,19 +6,16 @@ import lombok.Setter;
 
 @Getter
 @Setter
-    public class EntryDTO {
+    public class EntryShowDTO {
 
         private long id;
         private String title;
         private String website;
         private String email;
         private String categoryName;
-        private byte[] passwordCipher;
-        private byte[] passwordIv;
-        private String note;
 
 
-    public EntryDTO(){
+    public EntryShowDTO(){
 
         }
     }

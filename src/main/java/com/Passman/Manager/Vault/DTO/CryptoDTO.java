@@ -9,16 +9,16 @@ import lombok.Setter;
 @Setter
 public class CryptoDTO {
     private final boolean access;
-    private final KdfParams kdfParams;
-    private final byte[] encryptedDek;
-    private final byte[] encryptedDekIv;
+    private final KdfParams cryptoKdfParams;
+    private final byte[] cryptoSalt;
+    private final byte[] encryptedDEK;
+    private final byte[] encryptedDEK_iv;
 
-    public CryptoDTO(boolean access, KdfParams kdfParams, byte[] encryptedDek, byte[] encryptedDekIv) {
+    public CryptoDTO(boolean access, KdfParams cryptoKdfParams, byte[] encryptedDEK, byte[] encryptedDEK_iv, byte[] cryptoSalt) {
         this.access = access;
-        this.kdfParams = kdfParams;
-        this.encryptedDek = encryptedDek;
-        this.encryptedDekIv = encryptedDekIv;
+        this.cryptoKdfParams = cryptoKdfParams;
+        this.encryptedDEK = encryptedDEK;
+        this.encryptedDEK_iv= encryptedDEK_iv;
+        this.cryptoSalt = cryptoSalt;
     }
-
-
 }

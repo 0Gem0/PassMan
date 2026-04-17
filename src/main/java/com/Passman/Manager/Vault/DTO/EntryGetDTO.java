@@ -11,15 +11,10 @@ public class EntryGetDTO {
     private String website;
     private String email;
     private String categoryName;
-    private byte[] data;
+    private byte[] passwordCipher;
+    private byte[] passwordIv;
     private String note;
 
-    public EntryGetDTO(String title, String website, String email, String categoryName,byte[] data, String note) {
-        this.title = title;
-        this.website = website;
-        this.email = email;
-        this.categoryName = categoryName;
-        this.data = data;
-        this.note = note;
+    public EntryGetDTO() {
     }
 }

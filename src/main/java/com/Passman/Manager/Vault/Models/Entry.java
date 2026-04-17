@@ -1,11 +1,15 @@
 package com.Passman.Manager.Vault.Models;
 
 
+import com.Passman.Manager.RolesManagement.Models.AccessRights;
+import com.Passman.Manager.RolesManagement.Models.UserAccessRights;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
+
 import com.Passman.Manager.Auth.Models.User;
 
 @Entity
@@ -39,7 +43,7 @@ public class Entry {
     private Category category;
 
     @Column(name = "password", nullable = false)
-    private byte[] password;
+    private byte[] passwordCipher;
 
     @Column(name = "password_iv", nullable = false)
     private byte[] passwordIv;
@@ -49,6 +53,12 @@ public class Entry {
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "entry")
+    private List<AccessRights> accessRights;
+
+    @OneToMany(mappedBy = "entry")
+    private List<UserAccessRights> UserAccessRights;
 
     @PrePersist
     protected void onCreate() {

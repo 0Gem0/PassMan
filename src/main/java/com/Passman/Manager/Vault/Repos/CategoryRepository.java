@@ -13,7 +13,7 @@ import java.util.List;
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
 
-
+    void deleteByNameAndOwnerId(String categoryName, long OwnerId);
     @Query(value = "select * from categories c where c.name = :name and (owner_id = :ownerId or system = true) ", nativeQuery = true)
     Category findCategoryByNameAndOwnerId(@Param("name") String name,@Param("ownerId") long ownerId);
 
