@@ -14,10 +14,24 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findUserByLogin(String login);
-    List<User> findByDepartment(Department department);
-    @Query(value = "select u.encrypted_dek from users u where u.id = :id", nativeQuery = true)
-    Optional<byte[]> findUserDek(@Param("id") long id);
+    List<User> findByDepartmentId(Long departmentId);
 
     User findUserById(long id);
+
+    List<User> findAllByDepartmentId(Long id);
+
+    List<User> findAllByDepartmentIdIsNull();
+
+    List<User> findAllByDepartmentIdOrDepartmentIdIsNull(Long departmentId);
+
+    User findUserById(Long id);
+
+    @Query("""
+        select distinct u
+        from User u
+        join u.roles r
+        where r.id = :roleId
+    """)
+    List<User> findUsersByRoleId(@Param("roleId") Long roleId);
 
 }

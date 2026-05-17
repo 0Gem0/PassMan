@@ -26,30 +26,27 @@ public class Entry {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(length = 50, nullable = false)
+    @Column(length = 100, nullable = false)
     private String title;
 
-    @Column(length = 50)
+    @Column(length = 255)
     private String website;
 
-    @Column(length = 50)
+    @Column(length = 255)
     private String email;
 
-    @Column(length = 100)
+    @Column(columnDefinition = "TEXT")
     private String note;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
 
-    @Column(name = "password", nullable = false)
-    private byte[] passwordCipher;
+    @Column(name = "password_cipher", columnDefinition = "TEXT", nullable = false)
+    private String passwordCipher;
 
     @Column(name = "password_iv", nullable = false)
-    private byte[] passwordIv;
-//
-//    @Column(name = "encrypted_dek", nullable = false)
-//    private byte[] encryptedDek;
+    private String passwordIv;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -58,15 +55,10 @@ public class Entry {
     private List<AccessRights> accessRights;
 
     @OneToMany(mappedBy = "entry")
-    private List<UserAccessRights> UserAccessRights;
+    private List<UserAccessRights> userAccessRights;
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    public void onUpdate() {
         this.createdAt = LocalDateTime.now();
     }
 }

@@ -3,9 +3,12 @@ package com.Passman.Manager.Vault.Services;
 import com.Passman.Manager.Auth.Models.User;
 import com.Passman.Manager.Auth.POJO.KdfParams;
 import com.Passman.Manager.Auth.Repos.UserRepository;
-import com.Passman.Manager.RolesManagement.DTO.EntryShowDTO;
+import com.Passman.Manager.RolesManagement.Models.AccessRights;
+import com.Passman.Manager.RolesManagement.Models.EntryKey;
 import com.Passman.Manager.RolesManagement.Models.UserAccessRights;
+import com.Passman.Manager.RolesManagement.Repos.EntryKeyRepository;
 import com.Passman.Manager.RolesManagement.Repos.UserAccessRightsRepository;
+import com.Passman.Manager.RolesManagement.Services.RolesManagementService;
 import com.Passman.Manager.Vault.DTO.CryptoDTO;
 import com.Passman.Manager.Vault.DTO.EntryDTO;
 import com.Passman.Manager.Vault.DTO.EntryGetDTO;
@@ -33,6 +36,8 @@ public class EntryService {
     private final ModelMapper mapper;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    private final EntryKeyRepository entryKeyRepository;
+    private final RolesManagementService rolesManagementService;
 
     private final UserAccessRightsRepository userAccessRightsRepository;
 
@@ -40,11 +45,13 @@ public class EntryService {
     public EntryService(EntryRepository entryRepository,
                         ModelMapper mapper,
                         CategoryRepository categoryRepository,
-                        UserRepository userRepository, UserAccessRightsRepository userAccessRightsRepository) {
+                        UserRepository userRepository, EntryKeyRepository entryKeyRepository, RolesManagementService rolesManagementService, UserAccessRightsRepository userAccessRightsRepository) {
         this.entryRepository = entryRepository;
         this.mapper = mapper;
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
+        this.entryKeyRepository = entryKeyRepository;
+        this.rolesManagementService = rolesManagementService;
         this.userAccessRightsRepository = userAccessRightsRepository;
     }
 
@@ -55,7 +62,7 @@ public class EntryService {
     public List<EntryDTO> findAllAccessibleAsDto(User user) {
         return entryRepository.findAccessibleEntries(user.getId())
                 .stream()
-                .map(entry -> mapper.map(entry, EntryDTO.class))
+                .map(entry -> toEntryDTO(entry, user))
                 .collect(Collectors.toList());
     }
 
@@ -84,39 +91,68 @@ public class EntryService {
     }
 
     public CryptoDTO sendMeta(long id) {
-        Optional<byte[]> dek = userRepository.findUserDek(id);
-        if (dek.isEmpty()) {
-            return new CryptoDTO(false, new KdfParams(), new byte[0], new byte[0], new byte[0]);
-        } else {
-            User user = userRepository.findUserById(id);
+        User user = userRepository.findUserById(id);
+
+        if (user == null || !user.isVaultInitialized()) {
             return new CryptoDTO(
-                    true,
-                    user.getKdfParams(),
-                    user.getEncryptedDek(),
-                    user.getEncryptedDekIv(),
-                    user.getCryptoSalt()
+                    false,
+                    new KdfParams(),
+                    "",
+                    null,
+                    null,
+                    null
             );
         }
+        return new CryptoDTO(
+                true,
+                user.getKdfParams(),
+                user.getCryptoSalt(),
+                user.getPublicKey(),
+                user.getEncryptedPrivateKey(),
+                user.getPrivateKeyIv()
+        );
+    }
+//Сомнительно - маппить каждую entry
+    public EntryDTO toEntryDTO(Entry entry, User currentUser) {
+        EntryKey entryKey = entryKeyRepository
+                .findByEntryIdAndUserId(entry.getId(), currentUser.getId())
+                .orElseThrow(() -> new RuntimeException(
+                        "EntryKey not found for entryId=" + entry.getId()
+                                + ", userId=" + currentUser.getId()
+                ));
+
+        EntryDTO dto = new EntryDTO();
+        mapper.map(entryKey, dto);
+        mapper.map(entry, dto);
+        boolean[] permissions = rolesManagementService.resolveEntryPermissions(entry, currentUser);
+        dto.setCanView(permissions[0]);
+        dto.setCanEdit(permissions[1]);
+
+        return dto;
     }
 
+
     @Transactional
-    public void setMeta(long id, CryptoDTO cryptoDTO) {
+    public void setMeta(Long id, CryptoDTO cryptoDTO) {
         User user = userRepository.findUserById(id);
+        if (user.isVaultInitialized()) {
+            throw new RuntimeException("Vault already initialized");
+        }
+        user.setVaultInitialized(true);
         user.setKdfParams(cryptoDTO.getCryptoKdfParams());
-        user.setEncryptedDek(cryptoDTO.getEncryptedDEK());
-        user.setEncryptedDekIv(cryptoDTO.getEncryptedDEK_iv());
         user.setCryptoSalt(cryptoDTO.getCryptoSalt());
+        user.setPublicKey(cryptoDTO.getPublicKey());
+        user.setEncryptedPrivateKey(cryptoDTO.getEncryptedPrivateKey());
+        user.setPrivateKeyIv(cryptoDTO.getPrivateKeyIv());
     }
 
     @Transactional
-    public EntryDTO updateEntry(long id, EntryDTO updatedEntryDTO, long currentUserId){
+    public EntryDTO updateEntry(Long id, EntryDTO updatedEntryDTO, Long currentUserId){
         Optional<Entry> optionalEntry = entryRepository.findEntryById(id);
         if (optionalEntry.isEmpty()){
             return null;
         }
-
         Entry entry = optionalEntry.get();
-
         if (entry.getUser() != null && entry.getUser().getId().equals(currentUserId)) {
             if (updatedEntryDTO.getCategoryName() != null) {
                 Category category = categoryRepository.findCategoryByNameAndOwnerId(
@@ -126,11 +162,9 @@ public class EntryService {
                 entry.setCategory(category);
             }
         }
-
         entry.setTitle(updatedEntryDTO.getTitle());
         entry.setEmail(updatedEntryDTO.getEmail());
         entry.setWebsite(updatedEntryDTO.getWebsite());
-
         EntryDTO entryDTO = new EntryDTO();
         mapper.map(entry, entryDTO);
         return entryDTO;
@@ -143,23 +177,48 @@ public class EntryService {
 
     @Transactional
     public long save(EntryGetDTO entryDTO, long ownerId) {
-        UserAccessRights userAccessRights = new UserAccessRights();
-        Entry entry = new Entry();
         User user = userRepository.findUserById(ownerId);
+
         Category category = categoryRepository.findCategoryByNameAndOwnerId(
                 entryDTO.getCategoryName(),
                 ownerId
         );
 
+        if (entryDTO.getEncryptedDek() == null || entryDTO.getEncryptedDek().isBlank()) {
+            throw new RuntimeException("encryptedDek is required");
+        }
+
+        if (entryDTO.getDekIv() == null || entryDTO.getDekIv().isBlank()) {
+            throw new RuntimeException("dekIv is required");
+        }
+
+        if (entryDTO.getDekEnvelopeType() == null || entryDTO.getDekEnvelopeType().isBlank()) {
+            throw new RuntimeException("dekEnvelopeType is required");
+        }
+
+        Entry entry = new Entry();
         entry.setCategory(category);
         entry.setUser(user);
 
         Entry savedEntry = entryRepository.save(enrichEntry(entryDTO, entry));
+
+        EntryKey entryKey = new EntryKey();
+        entryKey.setEntry(savedEntry);
+        entryKey.setUser(user);
+        entryKey.setEncryptedDek(entryDTO.getEncryptedDek());
+        entryKey.setDekIv(entryDTO.getDekIv());
+        entryKey.setDekEnvelopeType(entryDTO.getDekEnvelopeType()); // KEK
+
+        entryKeyRepository.save(entryKey);
+
+        UserAccessRights userAccessRights = new UserAccessRights();
         userAccessRights.setEntry(savedEntry);
         userAccessRights.setUser(user);
+        userAccessRights.setCanView(true);
         userAccessRights.setCanEdit(true);
-        userAccessRights.setCanEdit(true);
+
         userAccessRightsRepository.save(userAccessRights);
+
         return savedEntry.getId();
     }
 

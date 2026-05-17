@@ -34,7 +34,7 @@ public class User {
     private String login;
 
     @Column(name = "salt")
-    private byte[] cryptoSalt;
+    private String cryptoSalt;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "kdf_params", columnDefinition = "jsonb")
@@ -66,11 +66,17 @@ public class User {
     @OneToMany(mappedBy = "user")
     private List<UserAccessRights> userAccessRights;
 
-    @Column(name = "encrypted_dek")
-    private byte[] encryptedDek;
+    @Column(name = "vault_initialized", nullable = false)
+    private boolean vaultInitialized = false;
 
-    @Column(name = "encrypted_dek_iv")
-    private byte[] encryptedDekIv;
+    @Column(name = "public_key", columnDefinition = "TEXT")
+    private String publicKey;
+
+    @Column(name = "encrypted_private_key", columnDefinition = "TEXT")
+    private String encryptedPrivateKey;
+
+    @Column(name = "private_key_iv")
+    private String privateKeyIv;
 
     @PrePersist
     public void onCreate() {

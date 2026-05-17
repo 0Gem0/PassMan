@@ -47,6 +47,7 @@ public class SecurityConfig {
         jsonFilter.setAuthenticationFailureHandler((req, res, ex) -> {
             res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication Failed");
         });
+
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
@@ -55,11 +56,15 @@ public class SecurityConfig {
                 .addFilter(jsonFilter)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/swagger-ui/**").permitAll()
-//                        .requestMatchers("/v3/api-docs").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
-                                .requestMatchers("/management/**").hasAnyRole("ADMIN", "LEAD")
-                        .requestMatchers("/vault/**").hasAnyRole("ADMIN", "LEAD", "USER")
+
+                        .requestMatchers("/management/**")
+                        .hasAnyAuthority("ROLE_ADMIN", "ROLE_LEAD")
+
+                        .requestMatchers("/vault/**")
+                        .authenticated()
+
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

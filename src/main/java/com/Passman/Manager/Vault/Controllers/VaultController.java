@@ -3,10 +3,8 @@ package com.Passman.Manager.Vault.Controllers;
 import com.Passman.Manager.Auth.Models.User;
 import com.Passman.Manager.Auth.Security.MyUserDetails;
 import com.Passman.Manager.PassGen.Services.PasswordGeneratorService;
-import com.Passman.Manager.RolesManagement.DTO.EntryShowDTO;
 import com.Passman.Manager.RolesManagement.Services.RolesManagementService;
 import com.Passman.Manager.Vault.DTO.*;
-import com.Passman.Manager.Vault.Models.Entry;
 import com.Passman.Manager.Vault.Services.CategoryService;
 import com.Passman.Manager.Vault.Services.EntryService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,10 +36,10 @@ public class VaultController {
         this.rolesManagementService = rolesManagementService;
     }
 
-    @GetMapping("/all")
-    public List<Entry> getAccessibleEntries(@AuthenticationPrincipal MyUserDetails currentUser) {
-        return entryService.findAccessibleEntries(currentUser.getUser());
-    }
+//    @GetMapping("/all")
+//    public List<Entry> getAccessibleEntries(@AuthenticationPrincipal MyUserDetails currentUser) {
+//        return entryService.findAccessibleEntries(currentUser.getUser());
+//    }
 
     @GetMapping("/entries/{id}")
     public EntryDTO showEntry(@AuthenticationPrincipal MyUserDetails userDetails,

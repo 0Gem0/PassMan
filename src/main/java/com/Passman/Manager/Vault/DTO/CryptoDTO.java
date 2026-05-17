@@ -2,23 +2,37 @@ package com.Passman.Manager.Vault.DTO;
 
 import com.Passman.Manager.Auth.POJO.KdfParams;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 
 @Getter
 @Setter
+@NoArgsConstructor
 public class CryptoDTO {
-    private final boolean access;
-    private final KdfParams cryptoKdfParams;
-    private final byte[] cryptoSalt;
-    private final byte[] encryptedDEK;
-    private final byte[] encryptedDEK_iv;
 
-    public CryptoDTO(boolean access, KdfParams cryptoKdfParams, byte[] encryptedDEK, byte[] encryptedDEK_iv, byte[] cryptoSalt) {
+    private boolean access;
+
+    private KdfParams cryptoKdfParams;
+
+    private String cryptoSalt;
+
+    private String publicKey;
+
+    private String encryptedPrivateKey;
+
+    private String privateKeyIv;
+
+    public CryptoDTO(boolean access,
+                     KdfParams cryptoKdfParams,
+                     String cryptoSalt,
+                     String publicKey,
+                     String encryptedPrivateKey,
+                     String privateKeyIv) {
         this.access = access;
         this.cryptoKdfParams = cryptoKdfParams;
-        this.encryptedDEK = encryptedDEK;
-        this.encryptedDEK_iv= encryptedDEK_iv;
         this.cryptoSalt = cryptoSalt;
+        this.publicKey = publicKey;
+        this.encryptedPrivateKey = encryptedPrivateKey;
+        this.privateKeyIv = privateKeyIv;
     }
 }

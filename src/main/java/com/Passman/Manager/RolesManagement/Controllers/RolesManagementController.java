@@ -6,6 +6,8 @@ import com.Passman.Manager.Auth.Security.MyUserDetails;
 import com.Passman.Manager.RolesManagement.DTO.*;
 import com.Passman.Manager.RolesManagement.Models.Role;
 import com.Passman.Manager.RolesManagement.Services.RolesManagementService;
+import com.Passman.Manager.Vault.DTO.EntryDTO;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -22,11 +24,33 @@ public class RolesManagementController {
         this.rolesManagementService = rolesManagementService;
     }
 
-    @GetMapping("/entries/all")   // слеш в конце убран
-    public List<EntryShowDTO> findAllEntriesShows(@AuthenticationPrincipal MyUserDetails currentUser) {
-        List<EntryShowDTO> list = rolesManagementService.findAllAccessibleAsDtoShow(currentUser.getUser());
+    @GetMapping("/users/{id}/public-key")
+    public UserPublicKeyDTO getPublicKey(@AuthenticationPrincipal MyUserDetails currentUser, @PathVariable long id){
+        return rolesManagementService.getUserPublicKey(currentUser, id);
+    }
+
+    @PostMapping("/share-entry")
+    public ResponseEntity<?> shareEntry(@AuthenticationPrincipal MyUserDetails currentUser,@RequestBody ShareEntryDTO shareEntryDTO){
+        rolesManagementService.shareEntry(currentUser,shareEntryDTO);
+        return ResponseEntity.ok("Ok");
+    }
+
+    @PostMapping("/roles")
+    public void createRole(@AuthenticationPrincipal MyUserDetails currentUser,
+                           @RequestBody CreateRoleDTO dto) {
+        rolesManagementService.createRole(currentUser, dto);
+    }
+
+    @GetMapping("/entries/all")
+    public List<EntryDTO> findAllEntriesShows(@AuthenticationPrincipal MyUserDetails currentUser) {
+        List<EntryDTO> list = rolesManagementService.findAllAccessibleAsDtoShow(currentUser.getUser());
         list.forEach(System.out::println);
         return rolesManagementService.findAllAccessibleAsDtoShow(currentUser.getUser());
+    }
+
+    @GetMapping("/roles/{roleId}/users")
+    public List<UserPublicKeyDTO> getRoleWorkers(@AuthenticationPrincipal MyUserDetails currentUser, @PathVariable Long roleId){
+        return rolesManagementService.findUsersByRole(roleId, currentUser.getId());
     }
 
     @GetMapping("/assignable-roles")
@@ -35,8 +59,23 @@ public class RolesManagementController {
     }
 
     @GetMapping("/department-workers")
-    public List<UserDTO> getDepartmentWorkers(@AuthenticationPrincipal MyUserDetails currentUser) {
+    public List<UserPublicKeyDTO> getDepartmentWorkers(@AuthenticationPrincipal MyUserDetails currentUser) {
         return rolesManagementService.getDepartmentWorkers(currentUser);
+    }
+
+    @GetMapping("/departments/assignable")
+    public List<DepartmentDTO> getAssignableDepartments(
+            @AuthenticationPrincipal MyUserDetails currentUser
+    ) {
+        return rolesManagementService.getAssignableDepartments(currentUser);
+    }
+
+    @PatchMapping("/users/department")
+    public void assignDepartment(
+            @AuthenticationPrincipal MyUserDetails currentUser,
+            @RequestBody AssignDepartmentDTO dto
+    ) {
+        rolesManagementService.assignDepartment(currentUser, dto);
     }
 
     @PostMapping("/assign-role")
@@ -76,5 +115,14 @@ public class RolesManagementController {
                                      @RequestParam Long targetUserId,
                                      @RequestParam Long entryId) {
         rolesManagementService.revokeAccessFromUser(currentUser, targetUserId, entryId);
+    }
+
+    @DeleteMapping("/revoke-role-access")
+    public void revokeAccessFromRole(
+            @AuthenticationPrincipal MyUserDetails currentUser,
+            @RequestParam Long roleId,
+            @RequestParam Long entryId
+    ) {
+        rolesManagementService.revokeAccessFromRole(currentUser, roleId, entryId);
     }
 }

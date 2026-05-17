@@ -11,9 +11,14 @@ public class EntryGetDTO {
     private String website;
     private String email;
     private String categoryName;
-    private byte[] passwordCipher;
-    private byte[] passwordIv;
     private String note;
+
+    private String passwordCipher;
+    private String passwordIv;
+
+    private String encryptedDek;
+    private String dekIv;
+    private String dekEnvelopeType;
 
     public EntryGetDTO() {
     }
