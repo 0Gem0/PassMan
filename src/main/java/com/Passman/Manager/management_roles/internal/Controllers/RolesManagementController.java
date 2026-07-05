@@ -1,10 +1,10 @@
 package com.Passman.Manager.management_roles.internal.Controllers;
 
 
-import com.Passman.Manager.shared.Security.MyUserDetails;
+import com.Passman.Manager.auth.internal.Security.MyUserDetails;
 import com.Passman.Manager.management_roles.DTO.*;
 import com.Passman.Manager.management_roles.internal.Services.RolesManagementService;
-import com.Passman.Manager.vault.DTO.EntryDTO;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -22,104 +22,110 @@ public class RolesManagementController {
     }
 
     @GetMapping("/users/{id}/public-key")
-    public UserPublicKeyDTO getPublicKey(@AuthenticationPrincipal MyUserDetails currentUser, @PathVariable long id){
-        return rolesManagementService.getUserPublicKey(currentUser.getId(), id);
+    public ResponseEntity<UserPublicKeyDTO> getPublicKey(@AuthenticationPrincipal MyUserDetails currentUser,
+                                                         @PathVariable long id) {
+        return ResponseEntity.ok(rolesManagementService.getUserPublicKey(currentUser.getId(), id));
     }
 
     @PostMapping("/share-entry")
-    public ResponseEntity<?> shareEntry(@AuthenticationPrincipal MyUserDetails currentUser,@RequestBody ShareEntryDTO shareEntryDTO){
-        rolesManagementService.shareEntry(currentUser.getId(),shareEntryDTO);
-        return ResponseEntity.ok("Ok");
+    public ResponseEntity<String> shareEntry(@AuthenticationPrincipal MyUserDetails currentUser,
+                                             @RequestBody ShareEntryDTO shareEntryDTO) {
+        rolesManagementService.shareEntry(currentUser.getId(), shareEntryDTO);
+        return ResponseEntity.ok("Entry shared successfully");
     }
 
     @PostMapping("/roles")
-    public void createRole(@AuthenticationPrincipal MyUserDetails currentUser,
-                           @RequestBody CreateRoleDTO dto) {
-        rolesManagementService.createRole(currentUser, dto);
+    public ResponseEntity<String> createRole(@AuthenticationPrincipal MyUserDetails currentUser,
+                                             @RequestBody CreateRoleDTO dto) {
+        rolesManagementService.createRole(currentUser.getId(), dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Role created");
     }
 
     @GetMapping("/entries/all")
-    public List<EntryDTO> findAllEntriesShows(@AuthenticationPrincipal MyUserDetails currentUser) {
-        List<EntryDTO> list = rolesManagementService.findAllAccessibleAsDtoShow(currentUser.getUser());
-        list.forEach(System.out::println);
-        return rolesManagementService.findAllAccessibleAsDtoShow(currentUser.getUser());
+    public ResponseEntity<List<EntryRolesDTO>> findAllEntriesShows(@AuthenticationPrincipal MyUserDetails currentUser) {
+        return ResponseEntity.ok(rolesManagementService.findAllAccessibleAsDtoShow(currentUser.getId()));
     }
 
     @GetMapping("/roles/{roleId}/users")
-    public List<UserPublicKeyDTO> getRoleWorkers(@AuthenticationPrincipal MyUserDetails currentUser, @PathVariable Long roleId){
-        return rolesManagementService.findUsersByRole(roleId, currentUser.getId());
+    public ResponseEntity<List<UserPublicKeyDTO>> getRoleWorkers(@AuthenticationPrincipal MyUserDetails currentUser,
+                                                                 @PathVariable Long roleId) {
+        return ResponseEntity.ok(rolesManagementService.findUsersByRole(roleId, currentUser.getId()));
     }
 
     @GetMapping("/assignable-roles")
-    public List<RoleDTO> getAssignableRoles(@AuthenticationPrincipal MyUserDetails currentUser) {
-        return rolesManagementService.getAssignableRoles(currentUser);
+    public ResponseEntity<List<RoleDTO>> getAssignableRoles(@AuthenticationPrincipal MyUserDetails currentUser) {
+        return ResponseEntity.ok(rolesManagementService.getAssignableRoles(currentUser.getId()));
     }
 
     @GetMapping("/department-workers")
-    public List<UserPublicKeyDTO> getDepartmentWorkers(@AuthenticationPrincipal MyUserDetails currentUser) {
-        return rolesManagementService.getDepartmentWorkers(currentUser);
+    public ResponseEntity<List<UserPublicKeyDTO>> getDepartmentWorkers(@AuthenticationPrincipal MyUserDetails currentUser) {
+        return ResponseEntity.ok(rolesManagementService.getDepartmentWorkers(currentUser.getId()));
     }
 
     @GetMapping("/departments/assignable")
-    public List<DepartmentDTO> getAssignableDepartments(
-            @AuthenticationPrincipal MyUserDetails currentUser
-    ) {
-        return rolesManagementService.getAssignableDepartments(currentUser);
+    public ResponseEntity<List<DepartmentDTO>> getAssignableDepartments(
+            @AuthenticationPrincipal MyUserDetails currentUser) {
+        return ResponseEntity.ok(rolesManagementService.getAssignableDepartments(currentUser.getId()));
     }
 
     @PatchMapping("/users/department")
-    public void assignDepartment(
+    public ResponseEntity<String> assignDepartment(
             @AuthenticationPrincipal MyUserDetails currentUser,
-            @RequestBody AssignDepartmentDTO dto
-    ) {
-        rolesManagementService.assignDepartment(currentUser, dto);
+            @RequestBody AssignDepartmentDTO assignDepartmentDTO) {
+        rolesManagementService.assignDepartment(currentUser.getId(), assignDepartmentDTO);
+        return ResponseEntity.ok("Department assigned");
     }
 
     @PostMapping("/assign-role")
-    public void assignRoleToUser(@AuthenticationPrincipal MyUserDetails currentUser,
-                                 @RequestBody AssignRoleDTO assignRoleDTO) {
+    public ResponseEntity<String> assignRoleToUser(@AuthenticationPrincipal MyUserDetails currentUser,
+                                                   @RequestBody AssignRoleDTO assignRoleDTO) {
         rolesManagementService.assignRoleToUser(
-                currentUser,
+                currentUser.getId(),
                 assignRoleDTO.getTargetUserId(),
                 assignRoleDTO.getRoleId()
         );
+        return ResponseEntity.ok("Role assigned to user");
     }
 
     @PostMapping("/remove-role")
-    public void removeRoleFromUser(@AuthenticationPrincipal MyUserDetails currentUser,
-                                   @RequestBody AssignRoleDTO assignRoleDTO) {
+    public ResponseEntity<String> removeRoleFromUser(@AuthenticationPrincipal MyUserDetails currentUser,
+                                                     @RequestBody AssignRoleDTO assignRoleDTO) {
         rolesManagementService.removeRoleFromUser(
-                currentUser,
+                currentUser.getId(),
                 assignRoleDTO.getTargetUserId(),
                 assignRoleDTO.getRoleId()
         );
+        return ResponseEntity.ok("Role removed from user");
     }
 
     @PostMapping("/assign-role-access")
-    public void grantAccessToRole(@AuthenticationPrincipal MyUserDetails currentUser,
-                                  @RequestBody AccessRightsDTO accessRightsDTO) {
-        rolesManagementService.grantAccessToRole(currentUser, accessRightsDTO);
+    public ResponseEntity<String> grantAccessToRole(@AuthenticationPrincipal MyUserDetails currentUser,
+                                                    @RequestBody AccessRightsDTO accessRightsDTO) {
+        rolesManagementService.grantAccessToRole(currentUser.getId(), accessRightsDTO);
+        return ResponseEntity.ok("Access granted to role");
     }
 
     @PostMapping("/assign-user-access")
-    public void grantAccessToUser(@AuthenticationPrincipal MyUserDetails currentUser,
-                                  @RequestBody UserAccessRightsDTO dto) {
-        rolesManagementService.grantAccessToUser(currentUser, dto);
+    public ResponseEntity<String> grantAccessToUser(@AuthenticationPrincipal MyUserDetails currentUser,
+                                                    @RequestBody UserAccessRightsDTO dto) {
+        rolesManagementService.grantAccessToUser(currentUser.getId(), dto);
+        return ResponseEntity.ok("Access granted to user");
     }
 
     @DeleteMapping("/revoke-user-access")
-    public void revokeAccessFromUser(@AuthenticationPrincipal MyUserDetails currentUser,
-                                     @RequestParam Long targetUserId,
-                                     @RequestParam Long entryId) {
-        rolesManagementService.revokeAccessFromUser(currentUser, targetUserId, entryId);
+    public ResponseEntity<String> revokeAccessFromUser(@AuthenticationPrincipal MyUserDetails currentUser,
+                                                       @RequestParam Long targetUserId,
+                                                       @RequestParam Long entryId) {
+        rolesManagementService.revokeAccessFromUser(currentUser.getId(), targetUserId, entryId);
+        return ResponseEntity.ok("Access revoked from user");
     }
 
     @DeleteMapping("/revoke-role-access")
-    public void revokeAccessFromRole(
+    public ResponseEntity<String> revokeAccessFromRole(
             @AuthenticationPrincipal MyUserDetails currentUser,
             @RequestParam Long roleId,
-            @RequestParam Long entryId
-    ) {
-        rolesManagementService.revokeAccessFromRole(currentUser, roleId, entryId);
+            @RequestParam Long entryId) {
+        rolesManagementService.revokeAccessFromRole(currentUser.getId(), roleId, entryId);
+        return ResponseEntity.ok("Access revoked from role");
     }
 }

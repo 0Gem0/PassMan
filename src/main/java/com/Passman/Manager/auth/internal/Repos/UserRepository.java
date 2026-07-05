@@ -16,7 +16,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findUserByLogin(String login);
     List<User> findByDepartmentId(Long departmentId);
 
-    Optional<User> findUserById(long id);
 
     List<User> findAllByDepartmentId(Long id);
 
@@ -24,14 +23,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findAllByDepartmentIdOrDepartmentIdIsNull(Long departmentId);
 
-    User findUserById(Long id);
+    Optional<User> findUserById(Long id);
 
-    @Query("""
-        select distinct u
-        from User u
-        join u.roles r
-        where r.id = :roleId
-    """)
-    List<User> findUsersByRoleId(@Param("roleId") Long roleId);
+//    @Query("""
+//        select distinct u
+//        from User u
+//        join u.roles r
+//        where r.id = :roleId
+//    """)
+//    List<User> findUsersByRoleId(@Param("roleId") Long roleId);
 
 }

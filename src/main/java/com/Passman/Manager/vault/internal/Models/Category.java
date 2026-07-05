@@ -1,7 +1,5 @@
 package com.Passman.Manager.vault.internal.Models;
 
-
-import com.Passman.Manager.auth.Models.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,9 +17,7 @@ public class Category {
     @Column(nullable = false)
     private String name;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id")
-    private User owner;
+    private Long ownerId;
 
     @Column(nullable = false)
     private boolean system;

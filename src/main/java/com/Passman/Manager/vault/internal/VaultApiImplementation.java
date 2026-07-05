@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 
@@ -31,22 +32,6 @@ public class VaultApiImplementation implements VaultApi {
         this.modelMapper = modelMapper;
     }
 
-//    public List<EntryDTO> findAllAccessibleAsDtoShow(Long currentUserId) {
-//        List<Entry> entries;
-//
-//        if (isAdmin(currentUser)) {
-//            entries = entryRepository.findAll();
-//        } else {
-//            entries = entryRepository.findAccessibleEntries(currentUser.getId());
-//        }
-//
-//        return entries.stream()
-//                .filter(entry -> entryKeyRepository
-//                        .existsByEntryIdAndUserId(entry.getId(), currentUser.getId()))
-//                .map(entry -> toEntryDTO(entry, currentUser))
-//                .collect(Collectors.toList());
-//    }
-
     @Override
     public List<EntryView> findAll() {
         List<Entry> entries = entryRepository.findAll();
@@ -58,5 +43,19 @@ public class VaultApiImplementation implements VaultApi {
     public List<EntryView> findAccessibleEntries(Long userId) {
         List<Entry> entries = entryRepository.findAccessibleEntries(userId);
         return entries.stream().map(entry -> modelMapper.map(entry, EntryView.class)).collect(Collectors.toList());
+    }
+
+    @Override
+    public EntryView getEntryView(Long entryId) {
+        Optional<Entry> entry = entryRepository.findEntryById(entryId);
+        if (entry.isPresent()){
+            return modelMapper.map(entry, EntryView.class);
+        }
+        else throw new RuntimeException("Entry not found");
+    }
+
+    @Override
+    public boolean entryExists(Long entryId) {
+        return entryRepository.existsById(entryId);
     }
 }

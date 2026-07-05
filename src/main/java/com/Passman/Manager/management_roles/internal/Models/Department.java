@@ -1,6 +1,5 @@
 package com.Passman.Manager.management_roles.internal.Models;
 
-import com.Passman.Manager.auth.Models.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

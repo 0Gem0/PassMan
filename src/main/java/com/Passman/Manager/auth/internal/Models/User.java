@@ -11,9 +11,6 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 @Getter
 @Setter
@@ -62,6 +59,21 @@ public class User {
 
     @Column(name = "private_key_iv")
     private String privateKeyIv;
+
+    @Column(nullable = false)
+    private boolean enabled = false;
+
+    @Column(name = "failed_login_attempts", nullable = false)
+    private int failedLoginAttempts = 0;
+
+    @Column(name = "lock_expiration")
+    private LocalDateTime lockExpiration;
+
+    @Column(name = "credentials_expiration")
+    private LocalDateTime credentialsExpiration;
+
+    @Column(name = "account_expiration")
+    private LocalDateTime accountExpiration;
 
     @PrePersist
     public void onCreate() {

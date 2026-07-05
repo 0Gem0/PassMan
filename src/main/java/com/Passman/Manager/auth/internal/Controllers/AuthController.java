@@ -2,7 +2,7 @@ package com.Passman.Manager.auth.internal.Controllers;
 
 import com.Passman.Manager.auth.internal.DTO.LoginUserDTO;
 import com.Passman.Manager.auth.internal.DTO.RegisterUserDto;
-import com.Passman.Manager.shared.Security.MyUserDetails;
+import com.Passman.Manager.auth.internal.Security.MyUserDetails;
 import com.Passman.Manager.auth.internal.Services.AuthService;
 import com.Passman.Manager.auth.internal.Services.RegistrationService;
 import org.springframework.beans.factory.annotation.Autowired;

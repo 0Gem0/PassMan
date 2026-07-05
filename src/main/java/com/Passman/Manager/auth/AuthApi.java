@@ -1,11 +1,13 @@
 package com.Passman.Manager.auth;
 
+import com.Passman.Manager.vault.DTO.CryptoDTO;
+
 import java.util.List;
 
 public interface AuthApi {
-    UserView getUserById(Long id);
+    UserView getUserViewById(Long id);
 
-    UserView getUserView(Long userId);
+    void initializeVault(Long userId, CryptoDTO cryptoDTO);
 
     String getPublicKey(Long userId);
 

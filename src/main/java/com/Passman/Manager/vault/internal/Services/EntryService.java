@@ -1,18 +1,18 @@
 package com.Passman.Manager.vault.internal.Services;
 
-import com.Passman.Manager.auth.Models.User;
+import com.Passman.Manager.auth.AuthApi;
+import com.Passman.Manager.auth.UserView;
+import com.Passman.Manager.management_roles.EntryKeyView;
+import com.Passman.Manager.management_roles.ManagementRolesApi;
 import com.Passman.Manager.shared.POJO.KdfParams;
-import com.Passman.Manager.auth.internal.Repos.UserRepository;
-import com.Passman.Manager.management_roles.internal.Models.EntryKey;
-import com.Passman.Manager.management_roles.internal.Models.UserAccessRights;
-import com.Passman.Manager.management_roles.internal.Repos.EntryKeyRepository;
-import com.Passman.Manager.management_roles.internal.Repos.UserAccessRightsRepository;
-import com.Passman.Manager.management_roles.internal.Services.RolesManagementService;
+import com.Passman.Manager.shared.util.InvalidStateException;
+import com.Passman.Manager.shared.util.NotFoundException;
 import com.Passman.Manager.vault.DTO.CryptoDTO;
 import com.Passman.Manager.vault.DTO.EntryDTO;
 import com.Passman.Manager.vault.DTO.EntryGetDTO;
-import com.Passman.Manager.vault.Models.Category;
-import com.Passman.Manager.vault.Models.Entry;
+import com.Passman.Manager.vault.EntryView;
+import com.Passman.Manager.vault.internal.Models.Category;
+import com.Passman.Manager.vault.internal.Models.Entry;
 import com.Passman.Manager.vault.internal.Repos.CategoryRepository;
 import com.Passman.Manager.vault.internal.Repos.EntryRepository;
 import jakarta.persistence.Transient;
@@ -34,51 +34,42 @@ public class EntryService {
     private final EntryRepository entryRepository;
     private final ModelMapper mapper;
     private final CategoryRepository categoryRepository;
-    private final UserRepository userRepository;
-    private final EntryKeyRepository entryKeyRepository;
-    private final RolesManagementService rolesManagementService;
 
-    private final UserAccessRightsRepository userAccessRightsRepository;
+    private final ManagementRolesApi managementRolesApi;
+
+    private final AuthApi authApi;
+
 
     @Autowired
-    public EntryService(EntryRepository entryRepository,
-                        ModelMapper mapper,
-                        CategoryRepository categoryRepository,
-                        UserRepository userRepository, EntryKeyRepository entryKeyRepository, RolesManagementService rolesManagementService, UserAccessRightsRepository userAccessRightsRepository) {
+    public EntryService(EntryRepository entryRepository, ModelMapper mapper, CategoryRepository categoryRepository, ManagementRolesApi managementRolesApi, AuthApi authApi) {
         this.entryRepository = entryRepository;
         this.mapper = mapper;
         this.categoryRepository = categoryRepository;
-        this.userRepository = userRepository;
-        this.entryKeyRepository = entryKeyRepository;
-        this.rolesManagementService = rolesManagementService;
-        this.userAccessRightsRepository = userAccessRightsRepository;
+        this.managementRolesApi = managementRolesApi;
+        this.authApi = authApi;
     }
 
-    public List<Entry> findAccessibleEntries(User user) {
-        return entryRepository.findAccessibleEntries(user.getId());
-    }
-
-    public List<EntryDTO> findAllAccessibleAsDto(User user) {
-        return entryRepository.findAccessibleEntries(user.getId())
+    public List<EntryDTO> findAllAccessibleAsDto(Long userId) {
+        return entryRepository.findAccessibleEntries(userId)
                 .stream()
-                .map(entry -> toEntryDTO(entry, user))
+                .map(entry -> toEntryDTO(entry, userId))
                 .collect(Collectors.toList());
     }
 
 
-    public List<EntryDTO> findAccessibleByCategory(String categoryName, User user) {
-        return entryRepository.findAccessibleEntriesByCategory(user.getId(), categoryName)
+    public List<EntryDTO> findAccessibleByCategory(String categoryName, Long userId) {
+        return entryRepository.findAccessibleEntriesByCategory(userId, categoryName)
                 .stream()
                 .map(entry -> mapper.map(entry, EntryDTO.class))
                 .collect(Collectors.toList());
     }
 
-    public Long findAccessibleCount(User user) {
-        return entryRepository.countAccessibleEntries(user.getId());
+    public Long findAccessibleCount(Long userId) {
+        return entryRepository.countAccessibleEntries(userId);
     }
 
-    public Map<String, Long> findAccessibleCountEntriesByCategory(User user) {
-        List<Entry> entries = entryRepository.findAccessibleEntries(user.getId());
+    public Map<String, Long> findAccessibleCountEntriesByCategory(Long userId) {
+        List<Entry> entries = entryRepository.findAccessibleEntries(userId);
 
         return entries.stream()
                 .filter(entry -> entry.getCategory() != null)
@@ -89,10 +80,10 @@ public class EntryService {
                 ));
     }
 
-    public CryptoDTO sendMeta(long id) {
-        User user = userRepository.findUserById(id);
+    public CryptoDTO sendMeta(Long userId) {
+        UserView userView = authApi.getUserViewById(userId);
 
-        if (user == null || !user.isVaultInitialized()) {
+        if (userView == null || !userView.vaultInitialized()) {
             return new CryptoDTO(
                     false,
                     new KdfParams(),
@@ -104,26 +95,21 @@ public class EntryService {
         }
         return new CryptoDTO(
                 true,
-                user.getKdfParams(),
-                user.getCryptoSalt(),
-                user.getPublicKey(),
-                user.getEncryptedPrivateKey(),
-                user.getPrivateKeyIv()
+                userView.kdfParams(),
+                userView.cryptoSalt(),
+                userView.publicKey(),
+                userView.encryptedPrivateKey(),
+                userView.privateKeyIv()
         );
     }
 //Сомнительно - маппить каждую entry
-    public EntryDTO toEntryDTO(Entry entry, User currentUser) {
-        EntryKey entryKey = entryKeyRepository
-                .findByEntryIdAndUserId(entry.getId(), currentUser.getId())
-                .orElseThrow(() -> new RuntimeException(
-                        "EntryKey not found for entryId=" + entry.getId()
-                                + ", userId=" + currentUser.getId()
-                ));
+    public EntryDTO toEntryDTO(Entry entry, Long currentUserId) {
+        EntryKeyView entryKeyView = managementRolesApi.findEntryKeyViewByEntryIdAndUserId(currentUserId,entry.getId());
 
         EntryDTO dto = new EntryDTO();
-        mapper.map(entryKey, dto);
+        mapper.map(entryKeyView, dto);
         mapper.map(entry, dto);
-        boolean[] permissions = rolesManagementService.resolveEntryPermissions(entry, currentUser);
+        boolean[] permissions = managementRolesApi.resolveEntryPermissions(entry.getId(), currentUserId, mapper.map(entry, EntryView.class));
         dto.setCanView(permissions[0]);
         dto.setCanEdit(permissions[1]);
 
@@ -131,18 +117,10 @@ public class EntryService {
     }
 
 
+
     @Transactional
-    public void setMeta(Long id, CryptoDTO cryptoDTO) {
-        User user = userRepository.findUserById(id);
-        if (user.isVaultInitialized()) {
-            throw new RuntimeException("Vault already initialized");
-        }
-        user.setVaultInitialized(true);
-        user.setKdfParams(cryptoDTO.getCryptoKdfParams());
-        user.setCryptoSalt(cryptoDTO.getCryptoSalt());
-        user.setPublicKey(cryptoDTO.getPublicKey());
-        user.setEncryptedPrivateKey(cryptoDTO.getEncryptedPrivateKey());
-        user.setPrivateKeyIv(cryptoDTO.getPrivateKeyIv());
+    public void setMeta(Long userId, CryptoDTO cryptoDTO) {
+        authApi.initializeVault(userId, cryptoDTO);
     }
 
     @Transactional
@@ -152,13 +130,16 @@ public class EntryService {
             return null;
         }
         Entry entry = optionalEntry.get();
-        if (entry.getUser() != null && entry.getUser().getId().equals(currentUserId)) {
+        if (entry.getUserId() != null && entry.getUserId().equals(currentUserId)) {
             if (updatedEntryDTO.getCategoryName() != null) {
-                Category category = categoryRepository.findCategoryByNameAndOwnerId(
+                Optional<Category> category = categoryRepository.findCategoryByNameAndOwnerId(
                         updatedEntryDTO.getCategoryName(),
                         currentUserId
                 );
-                entry.setCategory(category);
+                if (category.isPresent()){
+                    entry.setCategory(category.get());
+                }
+                else throw new NotFoundException("No category" +  updatedEntryDTO.getCategoryName() + "found");
             }
         }
         entry.setTitle(updatedEntryDTO.getTitle());
@@ -170,55 +151,38 @@ public class EntryService {
     }
 
     @Transactional
-    public void delete(long id) {
+    public void delete(Long id) {
         entryRepository.deleteById(id);
     }
 
+
     @Transactional
-    public long save(EntryGetDTO entryDTO, long ownerId) {
-        User user = userRepository.findUserById(ownerId);
+    public void save(EntryGetDTO entryDTO, Long ownerId) {
 
         Category category = categoryRepository.findCategoryByNameAndOwnerId(
                 entryDTO.getCategoryName(),
                 ownerId
-        );
+        ).orElseThrow(() -> new NotFoundException("No category" + entryDTO.getCategoryName() + "found"));
 
         if (entryDTO.getEncryptedDek() == null || entryDTO.getEncryptedDek().isBlank()) {
-            throw new RuntimeException("encryptedDek is required");
+            throw new InvalidStateException("encryptedDek is required");
         }
 
         if (entryDTO.getDekIv() == null || entryDTO.getDekIv().isBlank()) {
-            throw new RuntimeException("dekIv is required");
+            throw new InvalidStateException("dekIv is required");
         }
 
         if (entryDTO.getDekEnvelopeType() == null || entryDTO.getDekEnvelopeType().isBlank()) {
-            throw new RuntimeException("dekEnvelopeType is required");
+            throw new InvalidStateException("dekEnvelopeType is required");
         }
 
         Entry entry = new Entry();
         entry.setCategory(category);
-        entry.setUser(user);
+        entry.setUserId(ownerId);
 
         Entry savedEntry = entryRepository.save(enrichEntry(entryDTO, entry));
 
-        EntryKey entryKey = new EntryKey();
-        entryKey.setEntry(savedEntry);
-        entryKey.setUser(user);
-        entryKey.setEncryptedDek(entryDTO.getEncryptedDek());
-        entryKey.setDekIv(entryDTO.getDekIv());
-        entryKey.setDekEnvelopeType(entryDTO.getDekEnvelopeType()); // KEK
-
-        entryKeyRepository.save(entryKey);
-
-        UserAccessRights userAccessRights = new UserAccessRights();
-        userAccessRights.setEntry(savedEntry);
-        userAccessRights.setUser(user);
-        userAccessRights.setCanView(true);
-        userAccessRights.setCanEdit(true);
-
-        userAccessRightsRepository.save(userAccessRights);
-
-        return savedEntry.getId();
+        managementRolesApi.saveEntry(savedEntry.getId(), ownerId, entryDTO.getEncryptedDek(), entryDTO.getDekIv(), entryDTO.getDekEnvelopeType());
     }
 
     public EntryDTO findById(long id) {

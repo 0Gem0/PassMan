@@ -4,14 +4,13 @@ package com.Passman.Manager.shared.util;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter
-@Setter
-public class ApiError {
-    private String message;
-    private String exceptionMessage;
+import java.time.LocalDateTime;
 
-    public ApiError(String message, String exceptionMessage) {
-        this.message = message;
-        this.exceptionMessage = exceptionMessage;
-    }
+public record ApiError(
+        LocalDateTime timestamp,
+        int status,
+        String error,
+        String message,
+        String path
+) {
 }

@@ -48,11 +48,6 @@ public class Entry {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "entry")
-    private List<AccessRights> accessRights;
-
-    @OneToMany(mappedBy = "entry")
-    private List<UserAccessRights> userAccessRights;
 
     @PrePersist
     protected void onCreate() {

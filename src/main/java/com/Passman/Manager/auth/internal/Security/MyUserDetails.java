@@ -1,12 +1,15 @@
-package com.Passman.Manager.shared.Security;
+package com.Passman.Manager.auth.internal.Security;
 
 import com.Passman.Manager.auth.internal.Models.User;
 import lombok.Getter;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,16 +19,16 @@ public class MyUserDetails implements UserDetails {
 
     private final User user;
 
-    public MyUserDetails(User user) {
+    private final Collection<? extends GrantedAuthority> authorities;
+
+    public MyUserDetails(User user, Collection<? extends GrantedAuthority> authorities) {
         this.user = user;
+        this.authorities = authorities;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        if (user.getRoles() == null) {
-            return List.of();
-        }
-        return user.getRoles().stream().map(role -> new SimpleGrantedAuthority(role.getName())).collect(Collectors.toList());
+        return authorities;
     }
 
     @Override
@@ -43,22 +46,34 @@ public class MyUserDetails implements UserDetails {
     }
     @Override
     public boolean isAccountNonExpired() {
-        return true;
+        return user.getAccountExpiration() == null
+                || LocalDateTime.now().isBefore(user.getAccountExpiration());
     }
 
     @Override
     public boolean isAccountNonLocked() {
+        if (user.getLockExpiration() != null) {
+            if (LocalDateTime.now().isAfter(user.getLockExpiration())) {
+                user.setLockExpiration(null);
+                user.setFailedLoginAttempts(0);
+                return true;
+            }
+            return false;
+        }
         return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true;
+        return user.getCredentialsExpiration() == null
+                || LocalDateTime.now().isBefore(user.getCredentialsExpiration());
     }
+
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return user.isEnabled();
     }
+
 
 }
