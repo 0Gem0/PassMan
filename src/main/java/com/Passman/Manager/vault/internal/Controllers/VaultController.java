@@ -1,7 +1,7 @@
 package com.Passman.Manager.vault.internal.Controllers;
 
-import com.Passman.Manager.auth.internal.Security.MyUserDetails;
-import com.Passman.Manager.management_roles.internal.Services.RolesManagementService;
+import com.Passman.Manager.shared.Security.UserPrincipal;
+import com.Passman.Manager.management_roles.ManagementRolesApi;
 import com.Passman.Manager.vault.DTO.*;
 import com.Passman.Manager.vault.internal.Services.CategoryService;
 import com.Passman.Manager.vault.internal.Services.EntryService;
@@ -21,40 +21,40 @@ public class VaultController {
 
     private final EntryService entryService;
     private final CategoryService categoryService;
-    private final RolesManagementService rolesManagementService;
+
+    private final ManagementRolesApi managementRolesApi;
 
     @Autowired
     public VaultController(EntryService entryService,
-                           CategoryService categoryService,
-                           RolesManagementService rolesManagementService) {
+                           CategoryService categoryService, ManagementRolesApi managementRolesApi) {
         this.entryService = entryService;
         this.categoryService = categoryService;
-        this.rolesManagementService = rolesManagementService;
+        this.managementRolesApi = managementRolesApi;
     }
 
     @GetMapping("/entries/{id}")
-    public ResponseEntity<EntryDTO> showEntry(@AuthenticationPrincipal MyUserDetails userDetails,
+    public ResponseEntity<EntryDTO> showEntry(@AuthenticationPrincipal UserPrincipal userDetails,
                                               @PathVariable Long id) {
-        if (!rolesManagementService.hasAccess(id, userDetails.getUser().getId())) {
+        if (!managementRolesApi.hasAccess(id, userDetails.getId())) {
             throw new AccessDeniedException("You do not have access to this entry.");
         }
         return ResponseEntity.ok(entryService.findById(id));
     }
 
     @PatchMapping("/entries/update/{id}")
-    public ResponseEntity<EntryDTO> updatePassword(@AuthenticationPrincipal MyUserDetails userDetails,
+    public ResponseEntity<EntryDTO> updatePassword(@AuthenticationPrincipal UserPrincipal userDetails,
                                                    @PathVariable Long id,
                                                    @RequestBody EntryDTO updatedEntryDTO) {
-        if (!rolesManagementService.hasEditAccess(id, userDetails.getUser().getId())) {
+        if (!managementRolesApi.hasEditAccess(id, userDetails.getId())) {
             throw new AccessDeniedException("You do not have edit access to this entry.");
         }
-        return ResponseEntity.ok(entryService.updateEntry(id, updatedEntryDTO, userDetails.getUser().getId()));
+        return ResponseEntity.ok(entryService.updateEntry(id, updatedEntryDTO, userDetails.getId()));
     }
 
     @DeleteMapping("/entries/{id}")
-    public ResponseEntity<String> deleteEntry(@AuthenticationPrincipal MyUserDetails userDetails,
+    public ResponseEntity<String> deleteEntry(@AuthenticationPrincipal UserPrincipal userDetails,
                                               @PathVariable Long id) {
-        if (!rolesManagementService.hasEditAccess(id, userDetails.getUser().getId())) {
+        if (!managementRolesApi.hasEditAccess(id, userDetails.getId())) {
             throw new AccessDeniedException("You do not have edit access to this entry.");
         }
         entryService.delete(id);
@@ -62,68 +62,68 @@ public class VaultController {
     }
 
     @PostMapping("/entries/create")
-    public ResponseEntity<Void> createPassword(@AuthenticationPrincipal MyUserDetails userDetails,
+    public ResponseEntity<Void> createPassword(@AuthenticationPrincipal UserPrincipal userDetails,
                                                @RequestBody EntryGetDTO entryGetDTO) {
-        entryService.save(entryGetDTO, userDetails.getUser().getId());
+        entryService.save(entryGetDTO, userDetails.getId());
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @GetMapping("/entries/all")
-    public ResponseEntity<List<EntryDTO>> showAll(@AuthenticationPrincipal MyUserDetails userDetails) {
-        return ResponseEntity.ok(entryService.findAllAccessibleAsDto(userDetails.getUser().getId()));
+    public ResponseEntity<List<EntryDTO>> showAll(@AuthenticationPrincipal UserPrincipal userDetails) {
+        return ResponseEntity.ok(entryService.findAllAccessibleAsDto(userDetails.getId()));
     }
 
     @GetMapping("/entries")
-    public ResponseEntity<List<EntryDTO>> showEntriesByCategory(@AuthenticationPrincipal MyUserDetails userDetails,
+    public ResponseEntity<List<EntryDTO>> showEntriesByCategory(@AuthenticationPrincipal UserPrincipal userDetails,
                                                                 @RequestParam String categoryName) {
-        return ResponseEntity.ok(entryService.findAccessibleByCategory(categoryName, userDetails.getUser().getId()));
+        return ResponseEntity.ok(entryService.findAccessibleByCategory(categoryName, userDetails.getId()));
     }
 
     @GetMapping("/entries/count")
-    public ResponseEntity<Long> showCountEntries(@AuthenticationPrincipal MyUserDetails userDetails) {
-        return ResponseEntity.ok(entryService.findAccessibleCount(userDetails.getUser().getId()));
+    public ResponseEntity<Long> showCountEntries(@AuthenticationPrincipal UserPrincipal userDetails) {
+        return ResponseEntity.ok(entryService.findAccessibleCount(userDetails.getId()));
     }
 
     @GetMapping("/main")
-    public ResponseEntity<Map<String, Long>> countEntriesByCategory(@AuthenticationPrincipal MyUserDetails userDetails) {
-        return ResponseEntity.ok(entryService.findAccessibleCountEntriesByCategory(userDetails.getUser().getId()));
+    public ResponseEntity<Map<String, Long>> countEntriesByCategory(@AuthenticationPrincipal UserPrincipal userDetails) {
+        return ResponseEntity.ok(entryService.findAccessibleCountEntriesByCategory(userDetails.getId()));
     }
 
     @GetMapping("/entries/meta")
-    public ResponseEntity<CryptoDTO> sendMeta(@AuthenticationPrincipal MyUserDetails userDetails) {
-        return ResponseEntity.ok(entryService.sendMeta(userDetails.getUser().getId()));
+    public ResponseEntity<CryptoDTO> sendMeta(@AuthenticationPrincipal UserPrincipal userDetails) {
+        return ResponseEntity.ok(entryService.sendMeta(userDetails.getId()));
     }
 
     @PostMapping("/entries/meta")
-    public ResponseEntity<String> getMeta(@AuthenticationPrincipal MyUserDetails userDetails,
+    public ResponseEntity<String> getMeta(@AuthenticationPrincipal UserPrincipal userDetails,
                                           @RequestBody CryptoDTO cryptoDTO) {
-        entryService.setMeta(userDetails.getUser().getId(), cryptoDTO);
+        entryService.setMeta(userDetails.getId(), cryptoDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body("Meta added");
     }
 
     @GetMapping("/categories")
-    public ResponseEntity<List<String>> showCategories(@AuthenticationPrincipal MyUserDetails userDetails) {
-        return ResponseEntity.ok(categoryService.findCategories(userDetails.getUser().getId()));
+    public ResponseEntity<List<String>> showCategories(@AuthenticationPrincipal UserPrincipal userDetails) {
+        return ResponseEntity.ok(categoryService.findCategories(userDetails.getId()));
     }
 
     @PostMapping("/categories/add")
-    public ResponseEntity<String> addCategory(@AuthenticationPrincipal MyUserDetails userDetails,
+    public ResponseEntity<String> addCategory(@AuthenticationPrincipal UserPrincipal userDetails,
                                               @RequestBody CategoryDTO categoryDTO) {
-        categoryService.addCategory(categoryDTO, userDetails.getUser().getId());
+        categoryService.addCategory(categoryDTO, userDetails.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body("Category added");
     }
 
     @PatchMapping("/categories/update")
-    public ResponseEntity<String> updateCategory(@AuthenticationPrincipal MyUserDetails userDetails,
+    public ResponseEntity<String> updateCategory(@AuthenticationPrincipal UserPrincipal userDetails,
                                                  @RequestBody CategoryUpdateDTO categoryUpdateDTO) {
-        categoryService.updateCategory(categoryUpdateDTO, userDetails.getUser().getId());
+        categoryService.updateCategory(categoryUpdateDTO, userDetails.getId());
         return ResponseEntity.ok("Category updated");
     }
 
     @DeleteMapping("/categories/delete")
-    public ResponseEntity<String> deleteCategory(@AuthenticationPrincipal MyUserDetails userDetails,
+    public ResponseEntity<String> deleteCategory(@AuthenticationPrincipal UserPrincipal userDetails,
                                                  @RequestBody CategoryDTO categoryDTO) {
-        categoryService.delete(categoryDTO, userDetails.getUser().getId());
+        categoryService.delete(categoryDTO, userDetails.getId());
         return ResponseEntity.ok("Category deleted");
     }
 }

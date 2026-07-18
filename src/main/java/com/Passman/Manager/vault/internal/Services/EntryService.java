@@ -120,7 +120,7 @@ public class EntryService {
 
     @Transactional
     public void setMeta(Long userId, CryptoDTO cryptoDTO) {
-        authApi.initializeVault(userId, cryptoDTO);
+        authApi.initializeVault(userId, cryptoDTO.getCryptoKdfParams(), cryptoDTO.getCryptoSalt(), cryptoDTO.getPublicKey(), cryptoDTO.getEncryptedPrivateKey(), cryptoDTO.getPrivateKeyIv());
     }
 
     @Transactional

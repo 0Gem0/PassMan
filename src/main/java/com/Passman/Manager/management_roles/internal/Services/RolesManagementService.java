@@ -3,6 +3,7 @@ package com.Passman.Manager.management_roles.internal.Services;
 import com.Passman.Manager.auth.AuthApi;
 import com.Passman.Manager.auth.UserView;
 import com.Passman.Manager.management_roles.DTO.*;
+import com.Passman.Manager.management_roles.ManagementRolesApi;
 import com.Passman.Manager.management_roles.internal.Models.*;
 import com.Passman.Manager.management_roles.internal.Repos.*;
 import com.Passman.Manager.shared.util.*;
@@ -34,10 +35,12 @@ public class RolesManagementService {
 
     private final AuthApi authApi;
 
+    private final ManagementRolesApi managementRolesApi;
+
     public RolesManagementService(UserAccessRightsRepository userAccessRightsRepository, EntryKeyRepository entryKeyRepository, DepartmentRepository departmentRepository,
                                   AccessRightsRepository accessRightsRepository,
                                   ModelMapper mapper,
-                                  RoleRepository roleRepository, UsersRolesRepository usersRolesRepository, VaultApi vaultApi, AuthApi authApi) {
+                                  RoleRepository roleRepository, UsersRolesRepository usersRolesRepository, VaultApi vaultApi, AuthApi authApi, ManagementRolesApi managementRolesApi) {
         this.userAccessRightsRepository = userAccessRightsRepository;
         this.entryKeyRepository = entryKeyRepository;
         this.departmentRepository = departmentRepository;
@@ -47,29 +50,9 @@ public class RolesManagementService {
         this.usersRolesRepository = usersRolesRepository;
         this.vaultApi = vaultApi;
         this.authApi = authApi;
+        this.managementRolesApi = managementRolesApi;
     }
 
-    public boolean hasAccess(Long entryId, Long userId) {
-        var userAccessRightsOptional = userAccessRightsRepository.findByUserIdAndEntryId(userId, entryId);
-
-        if (userAccessRightsOptional.isPresent()) {
-            UserAccessRights userAccessRights = userAccessRightsOptional.get();
-            return userAccessRights.isCanView() || userAccessRights.isCanEdit();
-        }
-
-
-        for (Long roleId : usersRolesRepository.findAllByUserId(userId)) {
-            var accessRightsOptional = accessRightsRepository.findByRoleIdAndEntryId(roleId, entryId);
-            if (accessRightsOptional.isPresent()) {
-                AccessRights accessRights = accessRightsOptional.get();
-                if (accessRights.isCanView() || accessRights.isCanEdit()) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
 
     public List<EntryRolesDTO> findAllAccessibleAsDtoShow(Long currentUserId) {
         List<EntryView> entries;
@@ -208,7 +191,7 @@ public class RolesManagementService {
             throw new ForbiddenOperationException("You cannot share entries with users outside your department.");
         }
 
-        if (!hasAccess(entryId, currentUserId)) {
+        if (!managementRolesApi.hasAccess(entryId, currentUserId)) {
             throw new ForbiddenOperationException("You cannot share an entry you do not have access to.");
         }
 
@@ -240,24 +223,6 @@ public class RolesManagementService {
         entryKeyRepository.save(entryKey);
     }
 
-    public boolean hasEditAccess(Long entryId, Long userId) {
-        var userAccessRightsOptional = userAccessRightsRepository.findByUserIdAndEntryId(userId, entryId);
-
-        if (userAccessRightsOptional.isPresent()) {
-            return userAccessRightsOptional.get().isCanEdit();
-        }
-
-        List<Long> roleIds = usersRolesRepository.findAllByUserId(userId);
-
-        for (Long roleId : roleIds) {
-            var accessRightsOptional = accessRightsRepository.findByRoleIdAndEntryId(roleId, entryId);
-            if (accessRightsOptional.isPresent() && accessRightsOptional.get().isCanEdit()) {
-                return true;
-            }
-        }
-
-        return false;
-    }
 
     @Transactional(readOnly = true)
     public List<RoleDTO> getAssignableRoles(Long currentUserId) {
@@ -531,7 +496,7 @@ public class RolesManagementService {
             throw new ForbiddenOperationException("You cannot manage access for roles outside your department.");
         }
 
-        if (!hasAccess(entryId, currentUserId)) {
+        if (!managementRolesApi.hasAccess(entryId, currentUserId)) {
             throw new ForbiddenOperationException("You cannot grant access to an entry you do not have access to.");
         }
 
@@ -588,7 +553,7 @@ public class RolesManagementService {
             throw new ForbiddenOperationException("You cannot manage users outside your department.");
         }
 
-        if (!hasAccess(entryId, currentUserId)) {
+        if (!managementRolesApi.hasAccess(entryId, currentUserId)) {
             throw new ForbiddenOperationException("You cannot grant access to an entry you do not have access to.");
         }
 
@@ -636,7 +601,7 @@ public class RolesManagementService {
             throw new ForbiddenOperationException("You cannot manage users outside your department.");
         }
 
-        if (!hasAccess(entryId, currentUserId)) {
+        if (!managementRolesApi.hasAccess(entryId, currentUserId)) {
             throw new ForbiddenOperationException("You cannot revoke access to an entry you do not have access to.");
         }
 
@@ -714,7 +679,7 @@ public class RolesManagementService {
             return;
         }
 
-        if (hasAccess(entry.id(), targetUserId)) {
+        if (managementRolesApi.hasAccess(entry.id(), targetUserId)) {
             return;
         }
 

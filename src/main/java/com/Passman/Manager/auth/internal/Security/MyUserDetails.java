@@ -1,6 +1,7 @@
-package com.Passman.Manager.shared.Security;
+package com.Passman.Manager.auth.internal.Security;
 
 import com.Passman.Manager.auth.internal.Models.User;
+import com.Passman.Manager.shared.Security.UserPrincipal;
 import lombok.Getter;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
@@ -10,7 +11,7 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 
 @Getter
-public class MyUserDetails implements UserDetails {
+public class MyUserDetails implements UserDetails, UserPrincipal {
 
     private final User user;
 

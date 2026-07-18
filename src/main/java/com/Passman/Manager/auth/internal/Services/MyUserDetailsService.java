@@ -1,9 +1,9 @@
 package com.Passman.Manager.auth.internal.Services;
 import com.Passman.Manager.auth.internal.Models.User;
 import com.Passman.Manager.auth.internal.Repos.UserRepository;
+import com.Passman.Manager.auth.internal.Security.MyUserDetails;
 import com.Passman.Manager.management_roles.ManagementRolesApi;
 import com.Passman.Manager.management_roles.RoleView;
-import com.Passman.Manager.auth.internal.Security.MyUserDetails;
 import com.Passman.Manager.shared.util.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;

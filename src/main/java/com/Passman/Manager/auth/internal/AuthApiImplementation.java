@@ -4,10 +4,10 @@ import com.Passman.Manager.auth.AuthApi;
 import com.Passman.Manager.auth.UserView;
 import com.Passman.Manager.auth.internal.Models.User;
 import com.Passman.Manager.auth.internal.Repos.UserRepository;
+import com.Passman.Manager.shared.POJO.KdfParams;
 import com.Passman.Manager.shared.util.DuplicateResourceException;
 import com.Passman.Manager.shared.util.NotFoundException;
 import com.Passman.Manager.shared.util.NotValidException;
-import com.Passman.Manager.vault.DTO.CryptoDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -43,7 +43,7 @@ public class AuthApiImplementation implements AuthApi {
 
     @Override
     @Transactional
-    public void initializeVault(Long userId, CryptoDTO cryptoDTO) {
+    public void initializeVault(Long userId, KdfParams kdfParams, String cryptoSalt, String publicKey, String encryptedPrivateKey,String privateKeyIv) {
         User user = userRepository.findUserById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
@@ -52,22 +52,11 @@ public class AuthApiImplementation implements AuthApi {
         }
 
         user.setVaultInitialized(true);
-        user.setKdfParams(cryptoDTO.getCryptoKdfParams());
-        user.setCryptoSalt(cryptoDTO.getCryptoSalt());
-        user.setPublicKey(cryptoDTO.getPublicKey());
-        user.setEncryptedPrivateKey(cryptoDTO.getEncryptedPrivateKey());
-        user.setPrivateKeyIv(cryptoDTO.getPrivateKeyIv());
-    }
-
-
-    @Override
-    public String getPublicKey(Long userId) {
-        return null;
-    }
-
-    @Override
-    public boolean userExists(Long userId) {
-        return false;
+        user.setKdfParams(kdfParams);
+        user.setCryptoSalt(cryptoSalt);
+        user.setPublicKey(publicKey);
+        user.setEncryptedPrivateKey(encryptedPrivateKey);
+        user.setPrivateKeyIv(privateKeyIv);
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.Passman.Manager.auth.config;
+package com.Passman.Manager.auth.internal.config;
 
 import com.Passman.Manager.auth.internal.Filters.JsonUsernamePasswordAuthenticationFilter;
 import com.Passman.Manager.auth.internal.Services.MyUserDetailsService;

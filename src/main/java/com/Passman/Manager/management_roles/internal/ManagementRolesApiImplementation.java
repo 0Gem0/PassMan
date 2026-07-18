@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -136,6 +135,46 @@ public class ManagementRolesApiImplementation implements ManagementRolesApi {
         }
 
         return new boolean[]{canView, canEdit};
+    }
+
+    public boolean hasAccess(Long entryId, Long userId) {
+        var userAccessRightsOptional = userAccessRightsRepository.findByUserIdAndEntryId(userId, entryId);
+
+        if (userAccessRightsOptional.isPresent()) {
+            UserAccessRights userAccessRights = userAccessRightsOptional.get();
+            return userAccessRights.isCanView() || userAccessRights.isCanEdit();
+        }
+
+        for (Long roleId : usersRolesRepository.findAllByUserId(userId)) {
+            var accessRightsOptional = accessRightsRepository.findByRoleIdAndEntryId(roleId, entryId);
+            if (accessRightsOptional.isPresent()) {
+                AccessRights accessRights = accessRightsOptional.get();
+                if (accessRights.isCanView() || accessRights.isCanEdit()) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public boolean hasEditAccess(Long entryId, Long userId) {
+        var userAccessRightsOptional = userAccessRightsRepository.findByUserIdAndEntryId(userId, entryId);
+
+        if (userAccessRightsOptional.isPresent()) {
+            return userAccessRightsOptional.get().isCanEdit();
+        }
+
+        List<Long> roleIds = usersRolesRepository.findAllByUserId(userId);
+
+        for (Long roleId : roleIds) {
+            var accessRightsOptional = accessRightsRepository.findByRoleIdAndEntryId(roleId, entryId);
+            if (accessRightsOptional.isPresent() && accessRightsOptional.get().isCanEdit()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
 //    @Override

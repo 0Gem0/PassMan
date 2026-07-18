@@ -12,6 +12,10 @@ public interface ManagementRolesApi {
 
     List<RoleView> findRolesByUserId(Long userId);
 
+    boolean hasAccess(Long entryId, Long userId);
+
+    boolean hasEditAccess(Long entryId, Long userId);
+
     EntryKeyView findEntryKeyViewByEntryIdAndUserId(Long userId, Long EntryId);
 
 
